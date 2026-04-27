@@ -19,7 +19,7 @@ For rapid deployment on a clean Linux server (Ubuntu/Debian recommended), run th
 This script installs Docker, clones the repository, configures your environment, and starts the orchestrator.
 
 ```bash
-curl -sSL [https://raw.githubusercontent.com/chelotithehost-sketch/hermes-mythos-improved/main/install.sh](https://raw.githubusercontent.com/chelotithehost-sketch/hermes-mythos-improved/main/install.sh) | bash
+curl -sSL https://raw.githubusercontent.com/chelotithehost-sketch/hermes-mythos-improved/main/install.sh | bash
 ```
 
 ### What this script does:
