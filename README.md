@@ -1,7 +1,8 @@
 # Hermes-Mythos v2.0
 
 A 7-layer cognitive DAG pipeline for generating long-form literature via LLM providers. 
-The system is strictly optimized for a <2GB RAM footprint through serial execution and lazy module loading[cite: 269].
+
+The system is strictly optimized for a <2GB RAM footprint through serial execution and lazy module loading.
 
 ## Architecture
 ```
