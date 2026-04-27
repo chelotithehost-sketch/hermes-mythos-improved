@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # Hermes-Mythos: Enterprise-Grade Provisioning & Pairing Script
-# Version: 2.2
+# Version: 2.3
 # Targets: Docker, Multi-Provider LLM Gateway, Telegram, & WhatsApp
 # ==============================================================================
 
@@ -26,14 +26,12 @@ echo -e "${NC}"
 install_dependencies() {
     echo -e "${YELLOW}[1/6] Auditing System Dependencies...${NC}"
     
-    # Identify Sudo Requirement
     SUDO=''
     if [ "$(id -u)" != "0" ]; then 
         SUDO='sudo'
         echo -e "Note: Non-root user detected. Using sudo for system tasks."
     fi
 
-    # Update Package Lists
     $SUDO apt-get update -qq
 
     # Required Packages
@@ -51,23 +49,34 @@ install_dependencies() {
     echo -e "${GREEN}Dependencies verified.${NC}"
 }
 
-# --- 2. Repository & Volume Initialization ---
+# --- 2. Intelligent Repository Setup ---
 setup_repo() {
     echo -e "${YELLOW}[2/6] Initializing Data Structures...${NC}"
     
-    # Detect context
+    # Handle non-empty directory cloning
     if [ ! -d ".git" ]; then
         echo "Cloning latest improved architecture..."
-        git clone https://github.com/chelotithehost-sketch/hermes-mythos-improved.git . || true
+        # Clone to a temp folder to avoid 'destination path exists' error
+        git clone https://github.com/chelotithehost-sketch/hermes-mythos-improved.git temp_clone
+        cp -r temp_clone/* .
+        cp -r temp_clone/.* . 2>/dev/null || true
+        rm -rf temp_clone
+    else
+        echo "Existing repository detected. Syncing updates..."
+        git pull origin main || echo "Local changes detected; skipping sync."
     fi
 
     # Create Persistent Volumes with appropriate permissions
+    if [ "$(id -u)" != "0" ]; then SUDO='sudo'; fi
     $SUDO mkdir -p manuscripts library_db mnt/data webhooks
     $SUDO chmod -R 777 manuscripts library_db mnt/data
 }
 
 # --- 3. Unified LLM Gateway Configuration ---
 configure_llm() {
+    # CRITICAL: Reconnect stdin to the terminal so 'read' works during curl piping
+    exec < /dev/tty
+
     echo -e "\n${CYAN}--- LLM GATEWAY CONFIGURATION ---${NC}"
     echo "Leave blank to skip a provider. At least one is required for 'The Brain'."
     
@@ -93,7 +102,7 @@ configure_messaging() {
     read -p "Webhook Verify Token (Default: hermes_mythos_v2): " VERIFY_TOKEN
     VERIFY_TOKEN=${VERIFY_TOKEN:-hermes_mythos_v2}
 
-    # Fetch Public IP for Webhook Registration
+    # Fetch Public IP
     PUBLIC_IP=$(curl -s ifconfig.me)
 
     # Write the Immutable .env
@@ -122,6 +131,7 @@ configure_messaging() {
 # --- 5. Containerized Deployment ---
 deploy() {
     echo -e "\n${YELLOW}[5/6] Launching Containers (2GB RAM Hard-Limit)...${NC}"
+    if [ "$(id -u)" != "0" ]; then SUDO='sudo'; fi
     $SUDO docker-compose down > /dev/null 2>&1 || true
     $SUDO docker-compose up --build -d
 }
