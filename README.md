@@ -1,4 +1,3 @@
-```markdown
 # Hermes-Mythos v2.0
 
 A 7-layer cognitive DAG pipeline for generating long-form literature via LLM providers. 
