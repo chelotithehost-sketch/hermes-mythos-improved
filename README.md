@@ -1,15 +1,14 @@
-### Updated README.md for Hermes-Mythos v2.0
-
 ```markdown
 # Hermes-Mythos v2.0
 
-[cite_start]A 7-layer cognitive DAG pipeline for generating long-form literature via LLM providers[cite: 267]. [cite_start]The system is strictly optimized for a <2GB RAM footprint through serial execution and lazy module loading[cite: 269].
+A 7-layer cognitive DAG pipeline for generating long-form literature via LLM providers. 
+The system is strictly optimized for a <2GB RAM footprint through serial execution and lazy module loading[cite: 269].
 
 ## Architecture
 ```
-[cite_start]Thinker → Analyser → Planner → Writer → Reviewer → Compiler → Publisher [cite: 268]
-                                   ↑          |
-                                   └──(revision loop)──┘
+Thinker → Analyser → Planner → Writer → Reviewer → Compiler → Publisher
+                                            
+                                   
 ```
 
 ---
@@ -24,16 +23,16 @@ curl -sSL [https://raw.githubusercontent.com/chelotithehost-sketch/hermes-mythos
 
 ### What this script does:
 1. **Dependency Audit**: Checks for and installs Docker, Docker Compose, and Git.
-2. [cite_start]**Environment Setup**: Automatically creates a `.env` file and prompts you for your API keys (OpenAI, Anthropic, Gemini)[cite: 270].
-3. [cite_start]**Containerization**: Builds the optimized Python 3.12-slim image with 2GB memory hard-limits[cite: 188, 258, 259].
-4. [cite_start]**Volume Persistence**: Sets up `/mnt/data` for manuscript storage and `/app/library.db` for the SQLite metadata store[cite: 187, 260].
+2. **Environment Setup**: Automatically creates a `.env` file and prompts you for your API keys (OpenAI, Anthropic, Gemini).
+3. **Containerization**: Builds the optimized Python 3.12-slim image with 2GB memory hard-limits.
+4. **Volume Persistence**: Sets up `/mnt/data` for manuscript storage and `/app/library.db` for the SQLite metadata store.
 
 ---
 
 ## Manual Installation
 
 ### Docker (Recommended)
-[cite_start]If you already have Docker installed, follow these steps[cite: 270]:
+If you already have Docker installed, follow these steps:
 ```bash
 cp .env.example .env
 # Edit .env with your API keys
@@ -52,14 +51,14 @@ uvicorn core.app:app --reload
 
 | Action | Endpoint | Description |
 | :--- | :--- | :--- |
-| **Create** | `POST /manuscripts` | [cite_start]Initialize a new literary project with title/genre[cite: 270]. |
-| **Start** | `POST /manuscripts/{id}/run` | [cite_start]Triggers the 7-layer DAG pipeline[cite: 270]. |
-| **Status** | `GET /manuscripts/{id}/run/{run_id}` | [cite_start]Monitor real-time layer progress[cite: 270]. |
-| **Download** | `GET /manuscripts/{id}/download` | [cite_start]Retrieve the final EPUB/TXT file[cite: 270]. |
+| **Create** | `POST /manuscripts` | Initialize a new literary project with title/genre. |
+| **Start** | `POST /manuscripts/{id}/run` | Triggers the 7-layer DAG pipeline. |
+| **Status** | `GET /manuscripts/{id}/run/{run_id}` | Monitor real-time layer progress. |
+| **Download** | `GET /manuscripts/{id}/download` | Retrieve the final EPUB/TXT file. |
 
 ---
 
-## [cite_start]Supported LLM Gateway [cite: 271-277]
+## Supported LLM Gateway
 | Provider | Tier | Model |
 | :--- | :--- | :--- |
 | **Anthropic** | Frontier | claude-sonnet-4-20250514 |
@@ -99,5 +98,5 @@ sudo docker-compose up --build -d
 
 echo "Installation Complete. Hermes-Mythos is running on port 8000."
 ```
-
+This configuration ensures that any user can deploy the entire stack—including the message queue, SQLite database, and the 7-layer DAG—in a single session while strictly adhering to the 2GB RAM budget.
 [cite_start]This configuration ensures that any user can deploy the entire stack—including the message queue, SQLite database, and the 7-layer DAG—in a single session while strictly adhering to the 2GB RAM budget[cite: 188, 204, 258].
