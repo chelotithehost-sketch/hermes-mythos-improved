@@ -15,6 +15,42 @@ Thinker → Analyser → Planner → Writer → Reviewer → Compiler → Publis
 
 ## 🚀 Quick Start: One-Click Deployment
 
+Quick Environment Check Script
+Run this to auto-diagnose your setup:
+
+```bash
+cat > check_env.sh << 'EOF'
+#!/bin/bash
+echo "=== Environment Diagnostic ==="
+echo "Hostname: $(hostname)"
+echo "User: $(whoami)"
+echo "Docker CLI: $(command -v docker >/dev/null && echo '✓ Present' || echo '✗ Missing')"
+echo "Docker Socket: $(test -S /var/run/docker.sock && echo '✓ Accessible' || echo '✗ Not mounted')"
+echo "In Container: $(grep -q docker /proc/1/cgroup 2>/dev/null && echo '✓ Yes' || echo '✗ No')"
+echo "Deploy Script: $(test -f deploy.sh && echo '✓ Found' || echo '✗ Not in $(pwd)')"
+echo "=============================="
+EOF
+chmod +x check_env.sh && ./check_env.sh
+```
+
+Expected output if on host and ready:
+
+```bash
+=== Environment Diagnostic ===
+Hostname: ip-172-31-xx-xx
+User: ubuntu
+Docker CLI: ✓ Present
+Docker Socket: ✓ Accessible
+In Container: ✗ No
+Deploy Script: ✗ Not in /home/ubuntu  # ← Download it next
+==============================
+```
+
+**Immediate Action Plan**
+Run the diagnostic above to confirm your context
+If on host proceed and run install.sh in next step
+If in container without socket: Exit and run from host (simplest)
+
 For rapid deployment on a clean Linux server (Ubuntu/Debian recommended), run the following command. 
 This script installs Docker, clones the repository, configures your environment, and starts the orchestrator.
 
