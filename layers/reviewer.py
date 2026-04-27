@@ -1,8 +1,9 @@
 """
-Reviewer Layer — Quality review and revision decision.
+Reviewer Layer — Quality gatekeeper for any literary work.
 
-Responsibility: Evaluate the written chapters against the outlines and creative brief.
-Produce actionable feedback and decide whether revision is needed.
+Responsibility: Evaluates content against dynamic heuristics provided by the 
+Thinker/Planner. Determines if the quality meets the threshold for the 
+next DAG stage or requires a revision pass.
 """
 
 from __future__ import annotations
@@ -14,73 +15,73 @@ from typing import Any, Dict
 from core.config import Config
 from core.gateway import Gateway
 
+# Standardised logging for system monitoring
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are the Reviewer — the quality gatekeeper in a literary creation pipeline.
+# Base instructions ensuring the model maintains a professional critical persona
+BASE_REVIEWER_INSTRUCTIONS = """You are the Reviewer — the quality gatekeeper in a high-tier literary creation pipeline.
+You receive the generated text and must evaluate it against the specific project criteria provided. 
+Your review must be thorough, objective, and constructive.
 
-You receive the written chapters and must evaluate them against the creative brief
-and chapter outlines. Your review should be thorough but constructive.
-
-Evaluate on these dimensions (score 1-10 each):
-1. **Narrative coherence**: Does the story hang together logically?
-2. **Character consistency**: Do characters behave consistently? Are arcs satisfying?
-3. **Prose quality**: Is the writing engaging, varied, and free of AI-ish patterns?
-4. **Pacing**: Does tension build appropriately? Are there dead zones?
-5. **Theme execution**: Is the central theme explored effectively?
-6. **Outline adherence**: Does the draft follow the planned structure?
-7. **Reader engagement**: Would a reader want to keep reading?
-
-Output a JSON object with:
-- "scores": {dimension: score} for each dimension above
-- "overall_score": Weighted average (1-10)
-- "approved": boolean — true if overall_score >= 7
-- "strengths": List of what works well
-- "issues": List of specific problems with chapter references
-- "revision_instructions": If not approved, specific instructions for the Writer
-  (which chapters to revise, what to fix, what to preserve)
-- "line_notes": Optional specific line-level feedback
-
-Be honest. A score of 7+ means "publishable with minor edits." Don't inflate scores.
-If the draft has fundamental structural problems, say so — it's cheaper to fix now
-than after publication."""
-
+A score of 7+ means "publishable with minor edits." Do not inflate scores. 
+If the work has fundamental structural problems, flag them for revision."""
 
 async def execute(context: Dict[str, Any], gateway: Gateway, cfg: Config, **kwargs) -> Dict[str, Any]:
-    """Execute the Reviewer layer.
-
-    Reads context['chapters_raw'], sets context['needs_revision'] and
-    context['reviewer_feedback'].
     """
-    chapters_raw = context.get("chapters_raw", "")
-    creative_brief = context.get("creative_brief", "")
-    outlines = context.get("chapter_outlines", "")
+    Executes the Reviewer layer with support for dynamic evaluation profiles.
+    
+    Reads: context['chapters_raw'], context['evaluation_profile']
+    Sets: context['needs_revision'], context['reviewer_feedback'], context['review_metadata']
+    """
+    # 1. Content Retrieval 
+    content_to_review = context.get("chapters_raw") or context.get("manuscript_body")
+    creative_brief = context.get("creative_brief", "No brief provided.")
+    
+    if not content_to_review:
+        logger.error("Reviewer failed: No content found in context.")
+        raise ValueError("Reviewer requires 'chapters_raw' or 'manuscript_body' to proceed.")
 
-    if not chapters_raw:
-        raise ValueError("Reviewer requires 'chapters_raw' from Writer")
+    # 2. Dynamic Heuristic Mapping 
+    # Falls back to general quality metrics if no profile was set by the Thinker/Planner
+    eval_criteria = context.get("evaluation_profile", {
+        "Technical Accuracy": "Is the information factually correct and precise?",
+        "Prose Quality": "Is the writing engaging, varied, and free of AI patterns?",
+        "Structural Flow": "Does the document follow a logical progression?"
+    })
 
+    # 3. Revision Tracking [cite: 275, 278]
     revision_count = context.get("revision_count", 0)
     max_revisions = context.get("max_revisions", cfg.max_revisions)
 
+    # 4. Prompt Engineering for Any Literary Work [cite: 276]
+    criteria_str = "\n".join([f"{i+1}. **{k}**: {v}" for i, (k, v) in enumerate(eval_criteria.items())])
+    
+    system_prompt = f"{BASE_REVIEWER_INSTRUCTIONS}\n\nEVALUATION CRITERIA:\n{criteria_str}"
+    
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": (
             f"Creative Brief:\n{creative_brief}\n\n"
-            f"Chapter Outlines:\n{outlines}\n\n"
-            f"Written Chapters:\n{chapters_raw}\n\n"
+            f"Content to Review:\n{content_to_review}\n\n"
             f"Revision pass: {revision_count + 1} of {max_revisions + 1}\n\n"
-            "Provide your review as a JSON object. "
-            "Return ONLY the JSON, no markdown fences."
+            "Output a JSON object with:\n"
+            "- 'scores': {dimension: score 1-10}\n"
+            "- 'overall_score': Weighted average\n"
+            "- 'approved': boolean (true if overall_score >= 7)\n"
+            "- 'issues': List of specific problems\n"
+            "- 'revision_instructions': If not approved, what specifically to fix.\n"
+            "Return ONLY the JSON object."
         )},
     ]
 
-    logger.info("Reviewer: evaluating draft (revision %d/%d)...", revision_count, max_revisions)
+    # 5. Gateway Execution with Frontier Fallback [cite: 277]
+    logger.info("Reviewer: Evaluating draft (Revision %d/%d)...", revision_count, max_revisions)
     response, provider = await gateway.complete_with_fallback(messages=messages)
-    logger.info("Reviewer: completed via %s", provider)
+    logger.info("Reviewer: Evaluation completed via %s", provider)
 
-    # Parse the review to determine if revision is needed
+    # 6. Robust Response Parsing & Revision Logic [cite: 278, 280]
     needs_revision = False
     try:
-        # Try to parse JSON from response
         review_data = json.loads(response)
         approved = review_data.get("approved", False)
         overall_score = review_data.get("overall_score", 0)
@@ -88,22 +89,26 @@ async def execute(context: Dict[str, Any], gateway: Gateway, cfg: Config, **kwar
         if not approved and revision_count < max_revisions:
             needs_revision = True
             context["reviewer_feedback"] = review_data.get(
-                "revision_instructions", "Improve based on the issues listed."
+                "revision_instructions", "General improvements requested."
             )
             logger.info(
-                "Reviewer: draft not approved (score=%.1f), sending for revision %d",
-                overall_score, revision_count + 1,
+                "Reviewer: Draft rejected (Score: %.1f). Sending for revision pass %d.",
+                overall_score, revision_count + 1
             )
         else:
-            logger.info("Reviewer: draft approved (score=%.1f)", overall_score)
+            logger.info("Reviewer: Draft approved (Score: %.1f).", overall_score)
             needs_revision = False
+            
+        context["review_metadata"] = review_data
+
     except (json.JSONDecodeError, TypeError):
-        # If we can't parse the review, assume approved to avoid infinite loops
-        logger.warning("Reviewer: could not parse review JSON, assuming approved")
+        # Fail-safe: Assume approved on parse error to avoid infinite DAG loops [cite: 280]
+        logger.warning("Reviewer: Failed to parse JSON response. Assuming approved to prevent hang.")
         needs_revision = False
 
+    # 7. Memory Cleanup 
     context["needs_revision"] = needs_revision
-    context["review_output"] = response
-    context["review_data"] = response
-
+    del content_to_review
+    del messages
+    
     return context
