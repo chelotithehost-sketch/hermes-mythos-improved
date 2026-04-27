@@ -15,7 +15,8 @@ Thinker → Analyser → Planner → Writer → Reviewer → Compiler → Publis
 
 ## 🚀 Quick Start: One-Click Deployment
 
-For rapid deployment on a clean Linux server (Ubuntu/Debian recommended), run the following command. [cite_start]This script installs Docker, clones the repository, configures your environment, and starts the orchestrator[cite: 270].
+For rapid deployment on a clean Linux server (Ubuntu/Debian recommended), run the following command. 
+This script installs Docker, clones the repository, configures your environment, and starts the orchestrator.
 
 ```bash
 curl -sSL [https://raw.githubusercontent.com/chelotithehost-sketch/hermes-mythos-improved/main/install.sh](https://raw.githubusercontent.com/chelotithehost-sketch/hermes-mythos-improved/main/install.sh) | bash
@@ -99,4 +100,5 @@ sudo docker-compose up --build -d
 echo "Installation Complete. Hermes-Mythos is running on port 8000."
 ```
 This configuration ensures that any user can deploy the entire stack—including the message queue, SQLite database, and the 7-layer DAG—in a single session while strictly adhering to the 2GB RAM budget.
-[cite_start]This configuration ensures that any user can deploy the entire stack—including the message queue, SQLite database, and the 7-layer DAG—in a single session while strictly adhering to the 2GB RAM budget[cite: 188, 204, 258].
+
+This configuration ensures that any user can deploy the entire stack—including the message queue, SQLite database, and the 7-layer DAG—in a single session while strictly adhering to the 2GB RAM budget.
